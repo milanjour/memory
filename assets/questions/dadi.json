@@ -1,0 +1,126 @@
+{
+  "questions" : [
+    {
+      "id": "0",
+      "answers": [
+        {
+          "answer" : {
+            "id": "0",
+            "type" : "text",
+            "value": "1"
+          }
+        }
+        ,
+        {
+          "answer" : {
+            "id": "1",
+            "type" : "image",
+            "value": "dado-1.png"
+          }
+        }
+      ]
+    }
+    ,
+    {
+      "id": "1",
+      "answers": [
+        {
+          "answer" : {
+            "id": "3",
+            "type" : "text",
+            "value": "2"
+          }
+        }
+      ,
+        {
+          "answer" : {
+            "id": "4",
+            "type" : "image",
+            "value": "dado-2.png"
+          }
+        }
+      ]
+    }
+    ,
+    {
+      "id": "2",
+      "answers": [
+        {
+          "answer" : {
+            "id": "5",
+            "type" : "text",
+            "value": "3"
+          }
+        }
+      ,
+        {
+          "answer" : {
+            "id": "6",
+            "type" : "image",
+            "value": "dado-3.png"
+          }
+        }
+      ]
+    }
+    ,
+    {
+      "id": "3",
+      "answers": [
+        {
+          "answer": {
+            "id": "7",
+            "type": "text",
+            "value": "4"
+          }
+        },
+        {
+          "answer": {
+            "id": "8",
+            "type": "image",
+            "value": "dado-4.png"
+          }
+        }
+      ]
+    }
+  ,
+    {
+      "id": "4",
+      "answers": [
+        {
+          "answer": {
+            "id": "9",
+            "type": "text",
+            "value": "5"
+          }
+        },
+        {
+          "answer": {
+            "id": "10",
+            "type": "image",
+            "value": "dado-5.png"
+          }
+        }
+      ]
+    }
+  ,
+    {
+      "id": "5",
+      "answers": [
+        {
+          "answer": {
+            "id": "11",
+            "type": "text",
+            "value": "6"
+          }
+        },
+        {
+          "answer": {
+            "id": "12",
+            "type": "image",
+            "value": "dado-6.png"
+          }
+        }
+      ]
+    }
+  ]
+}
