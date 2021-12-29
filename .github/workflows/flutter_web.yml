@@ -19,7 +19,7 @@ jobs:
       - run: flutter build web --release --base-href="/memory/"
       - run: ls -la build/web/assets
       - run: ls -la build/web/assets/assets
-      - run: rsync -a -v --stats --progress build/web/assets/assets/images build/web/assets/images
+      - run: rsync -a -v --stats --progress build/web/assets/assets/images build/web/assets/
       - run: ls -la build/web/assets
       - run: |
           cd build/web
