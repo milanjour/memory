@@ -1,68 +1,62 @@
 {
-  "questions" : [
+  "questions": [
     {
       "id": "0",
       "answers": [
         {
-          "answer" : {
+          "answer": {
             "id": "0",
-            "type" : "text",
+            "type": "text",
             "value": "1"
           }
-        }
-        ,
+        },
         {
-          "answer" : {
+          "answer": {
             "id": "1",
-            "type" : "image",
+            "type": "image",
             "value": "dado-1.png"
           }
         }
       ]
-    }
-    ,
+    },
     {
       "id": "1",
       "answers": [
         {
-          "answer" : {
+          "answer": {
             "id": "3",
-            "type" : "text",
+            "type": "text",
             "value": "2"
           }
-        }
-      ,
+        },
         {
-          "answer" : {
+          "answer": {
             "id": "4",
-            "type" : "image",
+            "type": "image",
             "value": "dado-2.png"
           }
         }
       ]
-    }
-    ,
+    },
     {
       "id": "2",
       "answers": [
         {
-          "answer" : {
+          "answer": {
             "id": "5",
-            "type" : "text",
+            "type": "text",
             "value": "3"
           }
-        }
-      ,
+        },
         {
-          "answer" : {
+          "answer": {
             "id": "6",
-            "type" : "image",
+            "type": "image",
             "value": "dado-3.png"
           }
         }
       ]
-    }
-    ,
+    },
     {
       "id": "3",
       "answers": [
@@ -81,8 +75,7 @@
           }
         }
       ]
-    }
-  ,
+    },
     {
       "id": "4",
       "answers": [
@@ -101,8 +94,7 @@
           }
         }
       ]
-    }
-  ,
+    },
     {
       "id": "5",
       "answers": [
