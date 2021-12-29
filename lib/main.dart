@@ -64,10 +64,10 @@ class _MyHomePageState extends State<MyHomePage> {
     );
   }
 
-  IconButton createChooseGameButton(String iconFileName, String jsonFileName) {
+  Widget createChooseGameButton(String iconFileName, String jsonFileName) {
     return IconButton(
       icon: Image.asset(iconFileName),
-      iconSize: 300,
+      iconSize: 250,
       onPressed: () {
         setState(() {
           // see https://www.oliverboorman.biz/projects/tools/clocks.php
@@ -167,86 +167,88 @@ class _MyHomePageState extends State<MyHomePage> {
 
   @override
   Widget build(BuildContext context) {
-    double screenWidth = MediaQuery.of(context).size.width;
-    double screenHeight = MediaQuery.of(context).size.height;
-    double screenMinimumSize = min(screenWidth, screenHeight);
     if (questionSet == null && chooseGameDialogOn == false) {
       Future.delayed(
           const Duration(milliseconds: 0), () => chooseGameDialog(context));
     }
-    return questionSet != null
-        ? buildGameScaffold(screenMinimumSize)
-        : Container();
+    return questionSet != null ? buildGameScaffold() : Container();
   }
 
-  Scaffold buildGameScaffold(double screenMinimumSize) {
-    int cellCount = questionSet!.answers.length;
-    int columnCount = sqrt(cellCount).floor();
+  Scaffold buildGameScaffold() {
     return Scaffold(
         appBar: AppBar(
           title: Text(widget.title!),
         ),
-        body: Center(child: OrientationBuilder(builder: (context, orientation) {
-          return GridView.count(
-            crossAxisCount: orientation == Orientation.portrait
-                ? columnCount + 1
-                : columnCount + 2,
-            children: List.generate(cellCount, (index) {
-              Answer? currentAnswer = questionSet!.answers.elementAt(index);
-              return Padding(
-                padding: EdgeInsets.all(screenMinimumSize / 25),
-                child: GestureDetector(
-                  onTap: () => _select(index),
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(screenMinimumSize / 35),
-                    child: Stack(
-                      children: [
-                        Container(
-                          alignment: Alignment.center,
-                          color: Colors.white,
-                          child: currentAnswer.type == "image"
-                              ? Image(
-                                  image: AssetImage("images/" +
-                                      currentAnswer.value.toString()))
-                              : AutoSizeText(
-                                  currentAnswer.value.toString(),
+        body: LayoutBuilder(
+            builder: (BuildContext context, BoxConstraints constraints) {
+          return Center(
+              child: OrientationBuilder(builder: (context, orientation) {
+            int cellCount = questionSet!.answers.length;
+            return GridView.extent(
+              maxCrossAxisExtent: sqrt(
+                  constraints.maxWidth * constraints.maxHeight / cellCount),
+              padding: EdgeInsets.only(bottom: constraints.maxHeight / 20),
+              children: List.generate(cellCount, (index) {
+                Answer? currentAnswer = questionSet!.answers.elementAt(index);
+                return LayoutBuilder(builder:
+                    (BuildContext context, BoxConstraints constraints) {
+                  return Padding(
+                    padding: EdgeInsets.all(constraints.maxWidth / 10),
+                    child: GestureDetector(
+                      onTap: () => _select(index),
+                      child: ClipRRect(
+                        borderRadius:
+                            BorderRadius.circular(constraints.maxWidth / 10),
+                        child: Stack(
+                          children: [
+                            Container(
+                              alignment: Alignment.center,
+                              color: Colors.white,
+                              child: currentAnswer.type == "image"
+                                  ? Image(
+                                      image: AssetImage("images/" +
+                                          currentAnswer.value.toString()))
+                                  : AutoSizeText(
+                                      currentAnswer.value.toString(),
+                                      maxLines: 1,
+                                      style: const TextStyle(
+                                        fontSize: 100,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                            ),
+
+                            // Mark correct tiles
+                            if (correctIndices.contains(index))
+                              Container(
+                                alignment: Alignment.center,
+                                color: Colors.green.withOpacity(0.5),
+                              ),
+
+                            // Cover numbers which have not yet be found
+                            if (!correctIndices.contains(index) &&
+                                !selectedIndices.contains(index))
+                              Container(
+                                alignment: Alignment.center,
+                                color: Colors.grey,
+                                child: const AutoSizeText(
+                                  '?',
                                   maxLines: 1,
-                                  style: const TextStyle(
+                                  style: TextStyle(
                                     fontSize: 100,
                                     fontWeight: FontWeight.bold,
                                   ),
                                 ),
-                        ),
-
-                        // Mark correct tiles
-                        if (correctIndices.contains(index))
-                          Container(
-                            alignment: Alignment.center,
-                            color: Colors.green.withOpacity(0.5),
-                          ),
-
-                        // Cover numbers which have not yet be found
-                        if (!correctIndices.contains(index) &&
-                            !selectedIndices.contains(index))
-                          Container(
-                            alignment: Alignment.center,
-                            color: Colors.grey,
-                            child: const AutoSizeText(
-                              '?',
-                              maxLines: 1,
-                              style: TextStyle(
-                                fontSize: 100,
-                                fontWeight: FontWeight.bold,
                               ),
-                            ),
-                          ),
-                      ],
+                          ],
+                        ),
+                      ),
                     ),
-                  ),
-                ),
-              );
-            }),
-          );
-        })));
+                  );
+                });
+              }),
+            );
+          }));
+        }));
   }
 }
