@@ -57,7 +57,7 @@ class _MyHomePageState extends State<MyHomePage> {
         titleTextStyle: const TextStyle(fontSize: 40),
         // content: Text("You stepped on a mine. Be careful next time."),
         actions: [
-          createChooseGameButton('images/dado-5.png', "dadi.json"),
+          createChooseGameButton('images/dado-5.png', "dice.json"),
           createChooseGameButton('images/clock10_40.png', "clocks.json"),
         ],
       ),
