@@ -1,5 +1,6 @@
 import 'dart:math';
 
+import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/material.dart' hide Element;
 import 'package:auto_size_text/auto_size_text.dart';
 import 'package:flutter/services.dart';
@@ -39,12 +40,24 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
+  AudioPlayer audioPlayerMusic = AudioPlayer();
+  AudioPlayer audioPlayerSounds = AudioPlayer();
+
   QuestionSet? questionSet;
 
   List<int> selectedIndices = [];
   List<int> correctIndices = [];
 
   bool chooseGameDialogOn = false;
+
+  @override
+  initState() {
+    super.initState();
+    audioPlayerMusic.setUrl('assets/sounds/608624_bloodpixelhero_marvelous-gift.mp3');
+    audioPlayerMusic.setReleaseMode(ReleaseMode.LOOP);
+    audioPlayerMusic.setVolume(0.5);
+    audioPlayerMusic.resume();
+  }
 
   chooseGameDialog(BuildContext context) async {
     setState(() {
@@ -118,10 +131,17 @@ class _MyHomePageState extends State<MyHomePage> {
 
   bool _isRightMatch() {
     if (selectedIndices.length == 2) {
-      return questionSet!.isRightMatch(selectedIndices);
+      bool isRightMatch = questionSet!.isRightMatch(selectedIndices);
+      isRightMatch ? playLocal( "assets/sounds/439211__javapimp__kara-ok.ogg", 1.0) :
+      playLocal( "assets/sounds/572936__bloodpixelhero__error.wav", 1.0);
+      return isRightMatch;
     } else {
       return false;
     }
+  }
+
+  playLocal(String localPath, double volume) async {
+    int result = await audioPlayerSounds.play(localPath, isLocal: true, volume:volume);
   }
 
   void _checkFinishedGame() async {
