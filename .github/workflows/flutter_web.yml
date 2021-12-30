@@ -16,7 +16,7 @@ jobs:
           channel: 'dev'
       - run: flutter config --enable-web
       - run: flutter pub get
-      - run: flutter build web --release --base-href="/memory/"
+      - run: flutter build web --release --base-href="/memory/" --web-renderer canvaskit
       - run: ls -la build/web/assets
       - run: ls -la build/web/assets/assets
       - run: rsync -a -v --stats --progress build/web/assets/assets/images build/web/assets/
