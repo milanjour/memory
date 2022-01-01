@@ -1,17 +1,22 @@
 import 'dart:math';
 
 import 'package:audioplayers/audioplayers.dart';
-import 'package:flutter/material.dart' hide Element;
 import 'package:auto_size_text/auto_size_text.dart';
+import 'package:flutter/material.dart' hide Element;
 import 'package:flutter/services.dart';
-import 'questions_set.dart';
+import 'package:provider/provider.dart';
 
-const questionsFolder = "assets/questions/";
+import 'credits.dart';
+import 'drawer.dart';
+import 'drawer_state.dart';
+import 'questions_set.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
   runApp(const MyApp());
 }
+
+const questionsFolder = "assets/questions/";
 
 class MyApp extends StatelessWidget {
   const MyApp({Key? key}) : super(key: key);
@@ -31,9 +36,9 @@ class MyApp extends StatelessWidget {
 }
 
 class MyHomePage extends StatefulWidget {
-  const MyHomePage({Key? key, this.title}) : super(key: key);
-
   final String? title;
+
+  const MyHomePage({Key? key, this.title}) : super(key: key);
 
   @override
   State<MyHomePage> createState() => _MyHomePageState();
@@ -50,16 +55,115 @@ class _MyHomePageState extends State<MyHomePage> {
 
   bool chooseGameDialogOn = false;
 
+  _MyHomePageState();
+
   @override
-  initState() {
-    super.initState();
-    audioPlayerMusic.setUrl('assets/sounds/608624_bloodpixelhero_marvelous-gift.mp3');
-    audioPlayerMusic.setReleaseMode(ReleaseMode.LOOP);
-    audioPlayerMusic.setVolume(0.5);
-    audioPlayerMusic.resume();
+  Widget build(BuildContext context) {
+    if (questionSet == null && chooseGameDialogOn == false) {
+      print("no questions");
+      Future.delayed(
+          const Duration(milliseconds: 300), () => chooseGameDialog(context));
+    }
+    return ChangeNotifierProvider(
+        create: (context) => DrawerModel(),
+        child: Consumer<DrawerModel>(builder: (context, drawerModel, child) {
+          return Scaffold(
+              appBar: AppBar(
+                title: Text(widget.title!),
+              ),
+              drawer: buildDrawer(context),
+              body: Center(
+                    child: OrientationBuilder(builder: (context, orientation) {
+                  if (drawerModel.getSelectedItem() == "credits") {
+                    return const CreditsPage();
+                  }
+                  return questionSet != null
+                      ? buildGameScaffold()
+                      : Container();
+                }
+                )
+          )
+          );
+              }));
   }
 
+  Widget buildGameScaffold() {
+    int cellCount = questionSet!.answers.length;
+            return LayoutBuilder(
+                builder: (BuildContext context, BoxConstraints constraints) {
+                  return GridView.extent(
+                    maxCrossAxisExtent: sqrt(
+                        constraints.maxWidth * constraints.maxHeight /
+                            cellCount),
+                    padding: EdgeInsets.only(
+                        bottom: constraints.maxHeight / 20),
+                    children: List.generate(cellCount, (index) {
+                      Answer? currentAnswer = questionSet!.answers.elementAt(
+                          index);
+                      return LayoutBuilder(builder:
+                          (BuildContext context, BoxConstraints constraints) {
+                        return Padding(
+                          padding: EdgeInsets.all(constraints.maxWidth / 10),
+                          child: GestureDetector(
+                            onTap: () => _select(index),
+                            child: ClipRRect(
+                              borderRadius:
+                              BorderRadius.circular(constraints.maxWidth / 10),
+                              child: Stack(
+                                children: [
+                                  Container(
+                                    alignment: Alignment.center,
+                                    color: Colors.white,
+                                    child: currentAnswer.type == "image"
+                                        ? Image(
+                                        image: AssetImage("images/" +
+                                            currentAnswer.value.toString()))
+                                        : AutoSizeText(
+                                      currentAnswer.value.toString(),
+                                      maxLines: 1,
+                                      style: const TextStyle(
+                                        fontSize: 100,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                  ),
+
+                                  // Mark correct tiles
+                                  if (correctIndices.contains(index))
+                                    Container(
+                                      alignment: Alignment.center,
+                                      color: Colors.green.withOpacity(0.5),
+                                    ),
+
+                                  // Cover numbers which have not yet be found
+                                  if (!correctIndices.contains(index) &&
+                                      !selectedIndices.contains(index))
+                                    Container(
+                                      alignment: Alignment.center,
+                                      color: Colors.grey,
+                                      child: const AutoSizeText(
+                                        '?',
+                                        maxLines: 1,
+                                        style: TextStyle(
+                                          fontSize: 100,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
+                                    ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        );
+                      });
+                    }),
+                  );
+                })
+    ;
+                }
+
   chooseGameDialog(BuildContext context) async {
+    print("chooseGameDialog");
     setState(() {
       chooseGameDialogOn = true;
     });
@@ -80,19 +184,35 @@ class _MyHomePageState extends State<MyHomePage> {
   Widget createChooseGameButton(String iconFileName, String jsonFileName) {
     return IconButton(
       icon: Image.asset(iconFileName),
-      iconSize: 250,
+      iconSize: 200,
       onPressed: () {
         setState(() {
           // see https://www.oliverboorman.biz/projects/tools/clocks.php
           readJson(questionsFolder + jsonFileName);
           chooseGameDialogOn = false;
+          if (audioPlayerMusic.state != PlayerState.PLAYING) {
+            audioPlayerMusic.resume();
+          }
         });
+        print("close");
         Navigator.of(context).pop(true);
       },
     );
   }
 
-  _MyHomePageState();
+  @override
+  initState() {
+    super.initState();
+    audioPlayerMusic
+        .setUrl('assets/sounds/608624_bloodpixelhero_marvelous-gift.mp3');
+    audioPlayerMusic.setReleaseMode(ReleaseMode.LOOP);
+    audioPlayerMusic.setVolume(0.5);
+  }
+
+  playLocal(String localPath, double volume) async {
+    int result =
+        await audioPlayerSounds.play(localPath, isLocal: true, volume: volume);
+  }
 
   Future<void> readJson(String jsonLocation) async {
     final String jsonString = await rootBundle.loadString(jsonLocation);
@@ -101,47 +221,6 @@ class _MyHomePageState extends State<MyHomePage> {
 
       _reset();
     });
-  }
-
-  void _reset() {
-    setState(() {
-      questionSet!.shuffleAnswers();
-      correctIndices.clear();
-      selectedIndices.clear();
-    });
-  }
-
-  void _select(int selected) {
-    if (correctIndices.contains(selected) ||
-        (selectedIndices.contains(selected)) && selectedIndices.length < 2) {
-      return;
-    }
-    setState(() {
-      if (selectedIndices.length >= 2) {
-        selectedIndices.clear();
-      }
-      selectedIndices.add(selected);
-      if (_isRightMatch()) {
-        correctIndices.add(selectedIndices[0]);
-        correctIndices.add(selectedIndices[1]);
-      }
-    });
-    _checkFinishedGame();
-  }
-
-  bool _isRightMatch() {
-    if (selectedIndices.length == 2) {
-      bool isRightMatch = questionSet!.isRightMatch(selectedIndices);
-      isRightMatch ? playLocal( "assets/sounds/439211__javapimp__kara-ok.ogg", 1.0) :
-      playLocal( "assets/sounds/572936__bloodpixelhero__error.wav", 1.0);
-      return isRightMatch;
-    } else {
-      return false;
-    }
-  }
-
-  playLocal(String localPath, double volume) async {
-    int result = await audioPlayerSounds.play(localPath, isLocal: true, volume:volume);
   }
 
   void _checkFinishedGame() async {
@@ -185,90 +264,41 @@ class _MyHomePageState extends State<MyHomePage> {
     }
   }
 
-  @override
-  Widget build(BuildContext context) {
-    if (questionSet == null && chooseGameDialogOn == false) {
-      Future.delayed(
-          const Duration(milliseconds: 0), () => chooseGameDialog(context));
+  bool _isRightMatch() {
+    if (selectedIndices.length == 2) {
+      bool isRightMatch = questionSet!.isRightMatch(selectedIndices);
+      isRightMatch
+          ? playLocal("assets/sounds/439211__javapimp__kara-ok.ogg", 1.0)
+          : playLocal("assets/sounds/572936__bloodpixelhero__error.wav", 1.0);
+      return isRightMatch;
+    } else {
+      return false;
     }
-    return questionSet != null ? buildGameScaffold() : Container();
   }
 
-  Scaffold buildGameScaffold() {
-    return Scaffold(
-        appBar: AppBar(
-          title: Text(widget.title!),
-        ),
-        body: LayoutBuilder(
-            builder: (BuildContext context, BoxConstraints constraints) {
-          return Center(
-              child: OrientationBuilder(builder: (context, orientation) {
-            int cellCount = questionSet!.answers.length;
-            return GridView.extent(
-              maxCrossAxisExtent: sqrt(
-                  constraints.maxWidth * constraints.maxHeight / cellCount),
-              padding: EdgeInsets.only(bottom: constraints.maxHeight / 20),
-              children: List.generate(cellCount, (index) {
-                Answer? currentAnswer = questionSet!.answers.elementAt(index);
-                return LayoutBuilder(builder:
-                    (BuildContext context, BoxConstraints constraints) {
-                  return Padding(
-                    padding: EdgeInsets.all(constraints.maxWidth / 10),
-                    child: GestureDetector(
-                      onTap: () => _select(index),
-                      child: ClipRRect(
-                        borderRadius:
-                            BorderRadius.circular(constraints.maxWidth / 10),
-                        child: Stack(
-                          children: [
-                            Container(
-                              alignment: Alignment.center,
-                              color: Colors.white,
-                              child: currentAnswer.type == "image"
-                                  ? Image(
-                                      image: AssetImage("images/" +
-                                          currentAnswer.value.toString()))
-                                  : AutoSizeText(
-                                      currentAnswer.value.toString(),
-                                      maxLines: 1,
-                                      style: const TextStyle(
-                                        fontSize: 100,
-                                        fontWeight: FontWeight.bold,
-                                      ),
-                                    ),
-                            ),
+  void _reset() {
+    setState(() {
+      questionSet!.shuffleAnswers();
+      correctIndices.clear();
+      selectedIndices.clear();
+    });
+  }
 
-                            // Mark correct tiles
-                            if (correctIndices.contains(index))
-                              Container(
-                                alignment: Alignment.center,
-                                color: Colors.green.withOpacity(0.5),
-                              ),
-
-                            // Cover numbers which have not yet be found
-                            if (!correctIndices.contains(index) &&
-                                !selectedIndices.contains(index))
-                              Container(
-                                alignment: Alignment.center,
-                                color: Colors.grey,
-                                child: const AutoSizeText(
-                                  '?',
-                                  maxLines: 1,
-                                  style: TextStyle(
-                                    fontSize: 100,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                              ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  );
-                });
-              }),
-            );
-          }));
-        }));
+  void _select(int selected) {
+    if (correctIndices.contains(selected) ||
+        (selectedIndices.contains(selected)) && selectedIndices.length < 2) {
+      return;
+    }
+    setState(() {
+      if (selectedIndices.length >= 2) {
+        selectedIndices.clear();
+      }
+      selectedIndices.add(selected);
+      if (_isRightMatch()) {
+        correctIndices.add(selectedIndices[0]);
+        correctIndices.add(selectedIndices[1]);
+      }
+    });
+    _checkFinishedGame();
   }
 }
