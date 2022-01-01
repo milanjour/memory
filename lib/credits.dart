@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
 
 class CreditsPage extends StatelessWidget {
-  static const String routeName = '/credits';
-
   const CreditsPage({Key? key}) : super(key: key);
 
   @override
@@ -15,8 +13,12 @@ class CreditsPage extends StatelessWidget {
         child: Scaffold(
             body: CustomScrollView(slivers: [
           SliverList(
-              delegate: SliverChildListDelegate(
-                  ["url1", "url2"].map((text) => Text(text)).toList()))
+              delegate: SliverChildListDelegate([
+            "https://freesound.org/s/608624/",
+            "https://freesound.org/s/572936/",
+            "https://freesound.org/s/439211/",
+            "https://freesound.org/s/439191/"
+          ].map((text) => Text(text)).toList()))
         ])));
   }
 }
