@@ -1,0 +1,137 @@
+{
+  "questions": [
+    {
+      "id": "0",
+      "answers": [
+        {
+          "answer": {
+            "id": "0",
+            "type": "text",
+            "value": "03:00"
+          }
+        },
+        {
+          "answer": {
+            "id": "1",
+            "type": "image",
+            "value": "clock03_00.png"
+          }
+        }
+      ]
+    },
+    {
+      "id": "1",
+      "answers": [
+        {
+          "answer": {
+            "id": "3",
+            "type": "text",
+            "value": "03:40"
+          }
+        },
+        {
+          "answer": {
+            "id": "4",
+            "type": "image",
+            "value": "clock03_40.png"
+          }
+        }
+      ]
+    },
+    {
+      "id": "2",
+      "answers": [
+        {
+          "answer": {
+            "id": "5",
+            "type": "text",
+            "value": "03:50"
+          }
+        },
+        {
+          "answer": {
+            "id": "6",
+            "type": "image",
+            "value": "clock03_50.png"
+          }
+        }
+      ]
+    },
+    {
+      "id": "3",
+      "answers": [
+        {
+          "answer": {
+            "id": "7",
+            "type": "text",
+            "value": "08:15"
+          }
+        },
+        {
+          "answer": {
+            "id": "8",
+            "type": "image",
+            "value": "clock08_15.png"
+          }
+        }
+      ]
+    },
+    {
+      "id": "4",
+      "answers": [
+        {
+          "answer": {
+            "id": "9",
+            "type": "text",
+            "value": "10:20"
+          }
+        },
+        {
+          "answer": {
+            "id": "10",
+            "type": "image",
+            "value": "clock10_20.png"
+          }
+        }
+      ]
+    },
+    {
+      "id": "5",
+      "answers": [
+        {
+          "answer": {
+            "id": "11",
+            "type": "text",
+            "value": "10:40"
+          }
+        },
+        {
+          "answer": {
+            "id": "12",
+            "type": "image",
+            "value": "clock10_40.png"
+          }
+        }
+      ]
+    },
+    {
+      "id": "6",
+      "answers": [
+        {
+          "answer": {
+            "id": "11",
+            "type": "text",
+            "value": "12:15"
+          }
+        },
+        {
+          "answer": {
+            "id": "12",
+            "type": "image",
+            "value": "clock12_15.png"
+          }
+        }
+      ]
+    }
+  ]
+}
