@@ -9,6 +9,8 @@ import 'package:provider/provider.dart';
 import 'credits.dart';
 import 'drawer.dart';
 import 'drawer_state.dart';
+import 'memory_game.dart';
+import 'memory_game_state.dart';
 import 'questions_set.dart';
 
 void main() {
@@ -48,121 +50,51 @@ class _MyHomePageState extends State<MyHomePage> {
   AudioPlayer audioPlayerMusic = AudioPlayer();
   AudioPlayer audioPlayerSounds = AudioPlayer();
 
-  QuestionSet? questionSet;
-
-  List<int> selectedIndices = [];
-  List<int> correctIndices = [];
-
   bool chooseGameDialogOn = false;
 
   _MyHomePageState();
 
   @override
   Widget build(BuildContext context) {
-    if (questionSet == null && chooseGameDialogOn == false) {
-      print("no questions");
-      Future.delayed(
-          const Duration(milliseconds: 300), () => chooseGameDialog(context));
-    }
-    return ChangeNotifierProvider(
-        create: (context) => DrawerModel(),
-        child: Consumer<DrawerModel>(builder: (context, drawerModel, child) {
+    return MultiProvider(
+      providers: [
+        ChangeNotifierProvider<DrawerModel>(
+          create: (context) => DrawerModel(),
+        ),
+        ChangeNotifierProvider<MemoryGameState>(
+          create: (context) => MemoryGameState(),
+        ),
+      ],
+      child:
+          Consumer<MemoryGameState>(builder: (context, memoryGameState, child) {
+        return Consumer<DrawerModel>(builder: (context, drawerModel, child) {
+          if (memoryGameState.questionSet.questions.isEmpty &&
+              chooseGameDialogOn == false) {
+            print("no questions");
+            Future.delayed(const Duration(milliseconds: 300),
+                () => chooseGameDialog(context, memoryGameState));
+          }
           return Scaffold(
               appBar: AppBar(
                 title: Text(widget.title!),
               ),
               drawer: buildDrawer(context),
               body: Center(
-                    child: OrientationBuilder(builder: (context, orientation) {
-                  if (drawerModel.getSelectedItem() == "credits") {
-                    return const CreditsPage();
-                  }
-                  return questionSet != null
-                      ? buildGameScaffold()
-                      : Container();
+                  child: OrientationBuilder(builder: (context, orientation) {
+                if (drawerModel.getSelectedItem() == "credits") {
+                  return const CreditsPage();
                 }
-                )
-          )
-          );
-              }));
+                return memoryGameState.questionSet.questions.isNotEmpty
+                    ? const MemoryGame()
+                    : Container();
+              })));
+        });
+      }),
+    );
   }
 
-  Widget buildGameScaffold() {
-    int cellCount = questionSet!.answers.length;
-            return LayoutBuilder(
-                builder: (BuildContext context, BoxConstraints constraints) {
-                  return GridView.extent(
-                    maxCrossAxisExtent: sqrt(
-                        constraints.maxWidth * constraints.maxHeight /
-                            cellCount),
-                    padding: EdgeInsets.only(
-                        bottom: constraints.maxHeight / 20),
-                    children: List.generate(cellCount, (index) {
-                      Answer? currentAnswer = questionSet!.answers.elementAt(
-                          index);
-                      return LayoutBuilder(builder:
-                          (BuildContext context, BoxConstraints constraints) {
-                        return Padding(
-                          padding: EdgeInsets.all(constraints.maxWidth / 10),
-                          child: GestureDetector(
-                            onTap: () => _select(index),
-                            child: ClipRRect(
-                              borderRadius:
-                              BorderRadius.circular(constraints.maxWidth / 10),
-                              child: Stack(
-                                children: [
-                                  Container(
-                                    alignment: Alignment.center,
-                                    color: Colors.white,
-                                    child: currentAnswer.type == "image"
-                                        ? Image(
-                                        image: AssetImage("images/" +
-                                            currentAnswer.value.toString()))
-                                        : AutoSizeText(
-                                      currentAnswer.value.toString(),
-                                      maxLines: 1,
-                                      style: const TextStyle(
-                                        fontSize: 100,
-                                        fontWeight: FontWeight.bold,
-                                      ),
-                                    ),
-                                  ),
-
-                                  // Mark correct tiles
-                                  if (correctIndices.contains(index))
-                                    Container(
-                                      alignment: Alignment.center,
-                                      color: Colors.green.withOpacity(0.5),
-                                    ),
-
-                                  // Cover numbers which have not yet be found
-                                  if (!correctIndices.contains(index) &&
-                                      !selectedIndices.contains(index))
-                                    Container(
-                                      alignment: Alignment.center,
-                                      color: Colors.grey,
-                                      child: const AutoSizeText(
-                                        '?',
-                                        maxLines: 1,
-                                        style: TextStyle(
-                                          fontSize: 100,
-                                          fontWeight: FontWeight.bold,
-                                        ),
-                                      ),
-                                    ),
-                                ],
-                              ),
-                            ),
-                          ),
-                        );
-                      });
-                    }),
-                  );
-                })
-    ;
-                }
-
-  chooseGameDialog(BuildContext context) async {
+  chooseGameDialog(
+      BuildContext context, MemoryGameState memoryGameState) async {
     print("chooseGameDialog");
     setState(() {
       chooseGameDialogOn = true;
@@ -174,21 +106,24 @@ class _MyHomePageState extends State<MyHomePage> {
         titleTextStyle: const TextStyle(fontSize: 40),
         // content: Text("You stepped on a mine. Be careful next time."),
         actions: [
-          createChooseGameButton('images/dado-5.png', "dice.json"),
-          createChooseGameButton('images/clock10_40.png', "clocks.json"),
+          createChooseGameButton(
+              'images/dado-5.png', "dice.json", memoryGameState),
+          createChooseGameButton(
+              'images/clock10_40.png', "clocks.json", memoryGameState),
         ],
       ),
     );
   }
 
-  Widget createChooseGameButton(String iconFileName, String jsonFileName) {
+  Widget createChooseGameButton(String iconFileName, String jsonFileName,
+      MemoryGameState memoryGameState) {
     return IconButton(
       icon: Image.asset(iconFileName),
       iconSize: 200,
       onPressed: () {
         setState(() {
           // see https://www.oliverboorman.biz/projects/tools/clocks.php
-          readJson(questionsFolder + jsonFileName);
+          readJson(questionsFolder + jsonFileName, memoryGameState);
           chooseGameDialogOn = false;
           if (audioPlayerMusic.state != PlayerState.PLAYING) {
             audioPlayerMusic.resume();
@@ -209,96 +144,12 @@ class _MyHomePageState extends State<MyHomePage> {
     audioPlayerMusic.setVolume(0.5);
   }
 
-  playLocal(String localPath, double volume) async {
-    int result =
-        await audioPlayerSounds.play(localPath, isLocal: true, volume: volume);
-  }
-
-  Future<void> readJson(String jsonLocation) async {
+  Future<void> readJson(
+      String jsonLocation, MemoryGameState memoryGameState) async {
     final String jsonString = await rootBundle.loadString(jsonLocation);
     setState(() {
-      questionSet = questionSetFromJson(jsonString);
-
-      _reset();
+      QuestionSet questionSet = questionSetFromJson(jsonString);
+      memoryGameState.questionSet = questionSet;
     });
-  }
-
-  void _checkFinishedGame() async {
-    if (questionSet!.answers.length == correctIndices.length) {
-      await showDialog(
-        context: context,
-        builder: (ctx) => AlertDialog(
-          title: const Center(child: Text("Hai vinto!")),
-          titleTextStyle: const TextStyle(fontSize: 40),
-          // content: Text("You stepped on a mine. Be careful next time."),
-          actions: [
-            MaterialButton(
-              color: Colors.orangeAccent,
-              onPressed: () {
-                setState(() {
-                  questionSet = null;
-                });
-                Navigator.of(context).pop(true);
-              },
-              child: const Text(
-                "Cambia Gioco",
-                style: TextStyle(fontSize: 25),
-              ),
-            ),
-            MaterialButton(
-              color: Colors.lightGreenAccent,
-              onPressed: () {
-                setState(() {
-                  _reset();
-                });
-                Navigator.of(context).pop(true);
-              },
-              child: const Text(
-                "Gioca di nuovo",
-                style: TextStyle(fontSize: 25),
-              ),
-            ),
-          ],
-        ),
-      );
-    }
-  }
-
-  bool _isRightMatch() {
-    if (selectedIndices.length == 2) {
-      bool isRightMatch = questionSet!.isRightMatch(selectedIndices);
-      isRightMatch
-          ? playLocal("assets/sounds/439211__javapimp__kara-ok.ogg", 1.0)
-          : playLocal("assets/sounds/572936__bloodpixelhero__error.wav", 1.0);
-      return isRightMatch;
-    } else {
-      return false;
-    }
-  }
-
-  void _reset() {
-    setState(() {
-      questionSet!.shuffleAnswers();
-      correctIndices.clear();
-      selectedIndices.clear();
-    });
-  }
-
-  void _select(int selected) {
-    if (correctIndices.contains(selected) ||
-        (selectedIndices.contains(selected)) && selectedIndices.length < 2) {
-      return;
-    }
-    setState(() {
-      if (selectedIndices.length >= 2) {
-        selectedIndices.clear();
-      }
-      selectedIndices.add(selected);
-      if (_isRightMatch()) {
-        correctIndices.add(selectedIndices[0]);
-        correctIndices.add(selectedIndices[1]);
-      }
-    });
-    _checkFinishedGame();
   }
 }
